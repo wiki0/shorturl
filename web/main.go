@@ -1,10 +1,14 @@
 package main
 
 import (
-	"net/http"
-
+	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/olivere/elastic/v7"
+	"net/http"
 )
+
+var client *elastic.Client
+var host = "http://114.67.105.20:9201/"
 
 // 定义接收数据的结构体
 type Login struct {
@@ -13,7 +17,22 @@ type Login struct {
 	Pssword string `form:"password" json:"password" uri:"password" xml:"password" binding:"required"`
 }
 
+type Person struct {
+	Name      string `json:"name"`
+	Sex       string `json:"sex"`
+	Birthday  string `db:"birthday"`
+	Telephone string `db:"telephone"`
+	Phone     string `db:"phone"`
+	ID        string `db:"ID"`
+	Label     string `json:"label"`
+}
+
 func main() {
+	var err error
+	client, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL("http://114.67.105.20:9201/"))
+	if err != nil {
+		panic(err)
+	}
 	r := gin.Default()
 	r.LoadHTMLGlob("web/view/*")
 	r.GET("/", func(c *gin.Context) {
@@ -29,11 +48,18 @@ func main() {
 			return
 		}
 		// 判断用户名密码是否正确
-		if form.User != "root" || form.Pssword != "admin" {
+		if form.Pssword != "admin" {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "304"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"status": "200"})
+		//字段相等
+		q := elastic.NewQueryStringQuery("name:" + form.User)
+		var res *elastic.SearchResult
+		res, err = client.Search("cz-data").Query(q).Do(context.Background())
+		if err != nil {
+			println(err.Error())
+		}
+		c.JSON(http.StatusOK, res)
 	})
 	r.Run()
 }
