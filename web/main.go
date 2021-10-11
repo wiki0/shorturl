@@ -53,9 +53,9 @@ func main() {
 			return
 		}
 		//字段相等
-		q := elastic.NewQueryStringQuery("name:" + form.User)
+		q := elastic.NewQueryStringQuery("name.keyword:" + form.User)
 		var res *elastic.SearchResult
-		res, err = client.Search("cz-data").Query(q).Do(context.Background())
+		res, err = client.Search("cz-data").Size(100).Query(q).Do(context.Background())
 		if err != nil {
 			println(err.Error())
 		}

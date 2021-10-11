@@ -42,14 +42,14 @@ var Es *elastic.Client
 
 func init() {
 
-	database, err := sqlx.Open("mysql", "yf:wiki5620@tcp(114.67.105.20:3306)/test")
+	database, err := sqlx.Open("mysql", "yf:wiki5620@tcp(localhost:3306)/person")
 	if err != nil {
 		// Handle error
 		panic(err)
 	}
 
 	Db = database
-	client, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL("http://114.67.105.20:9200/"))
+	client, err := elastic.NewClient(elastic.SetSniff(false), elastic.SetURL("http://114.67.105.20:9201/"))
 	if err != nil {
 		panic(err)
 	}
@@ -73,10 +73,14 @@ func transBlankDay(per PagePerson) string {
 }
 
 func transSex(str *string) string {
-	if "XB1" == *str {
-		return "男"
+	if str != nil {
+		if "XB1" == *str {
+			return "男"
+		} else {
+			return "女"
+		}
 	} else {
-		return "女"
+		return "男"
 	}
 }
 
@@ -109,7 +113,7 @@ func bulkPushEsEmpty(client *elastic.Client, ch chan Person) {
 	if 0 < len(ch) && len(ch) < 800 {
 		go func() {
 			for i := 1; i <= len(ch); i++ {
-				esRequest := elastic.NewBulkIndexRequest().Index("person-data").Doc(<-ch)
+				esRequest := elastic.NewBulkIndexRequest().Index("cz-data").Doc(<-ch)
 				bulkRequest = bulkRequest.Add(esRequest)
 			}
 			_, err := bulkRequest.Do(ctx)
@@ -127,7 +131,7 @@ func bulkPushEs(client *elastic.Client, ch chan Person) {
 	if len(ch) >= 800 {
 		go func() {
 			for i := 1; i <= len(ch); i++ {
-				esRequest := elastic.NewBulkIndexRequest().Index("person-data").Doc(<-ch)
+				esRequest := elastic.NewBulkIndexRequest().Index("cz-data").Doc(<-ch)
 				bulkRequest = bulkRequest.Add(esRequest)
 			}
 			_, err := bulkRequest.Do(ctx)
