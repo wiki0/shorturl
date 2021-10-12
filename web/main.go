@@ -36,7 +36,7 @@ func main() {
 	r := gin.Default()
 	r.LoadHTMLGlob("web/view/*")
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{"title": "我是测试", "ce": "123456"})
+		c.HTML(http.StatusOK, "index.html", gin.H{"title": "我是测试", "password": "admin"})
 	})
 	r.POST("/loginForm", func(c *gin.Context) {
 		// 声明接收的变量
